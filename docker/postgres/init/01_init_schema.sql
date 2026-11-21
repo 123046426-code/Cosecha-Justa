@@ -182,7 +182,7 @@ CREATE INDEX IF NOT EXISTS idx_productos_nombre ON productos(nombre);
 CREATE INDEX IF NOT EXISTS idx_usuarios_correo ON usuarios(correo);
 
 -- =============================================================================
--- DATOS SEMILLA / CATÁLOGOS INICIALES
+-- DATOS SEMILLA / CATÁLOGOS INICIALES Y USUARIOS DE PRUEBA
 -- =============================================================================
 
 -- Roles
@@ -231,8 +231,7 @@ INSERT INTO opciones_entrega (id_opcion, nombre, descripcion) VALUES
     (3, 'Punto medio de encuentro', 'Acuerdo de entrega en una plaza o mercado local')
 ON CONFLICT (id_opcion) DO NOTHING;
 
--- Usuario administrador por defecto (password inicial: Admin1234*)
--- Hash generado con bcrypt
+-- 1. Usuario Administrador (Password: Admin1234*)
 INSERT INTO usuarios (id_usuario, id_rol, nombre, apellidos, correo, contrasena_hash, telefono, activo)
 VALUES (
     1, 
@@ -240,10 +239,75 @@ VALUES (
     'Administrador', 
     'Cosecha Justa', 
     'admin@cosechajusta.upq.edu.mx', 
-    '$2b$12$Kk9O8n7o3.eZ3YcZ7/lZk.mRz15M7/yX7rM2k7xWb3w8rT8Y0eK1W', 
+    '$2b$12$2zgaHV9PkAJCEAUsZbK14OLUPF0TJ8Dldu9OEQkOb.Ge.CicHXAGm', 
     '4421019000', 
     TRUE
-) ON CONFLICT (correo) DO NOTHING;
+) ON CONFLICT (correo) DO UPDATE SET contrasena_hash = EXCLUDED.contrasena_hash, activo = TRUE;
+
+-- 2. Usuario Productor (Password: Productor1234*)
+INSERT INTO usuarios (id_usuario, id_rol, nombre, apellidos, correo, contrasena_hash, telefono, activo)
+VALUES (
+    2,
+    2,
+    'Don Pedro',
+    'González Huerta',
+    'productor@cosechajusta.upq.edu.mx',
+    '$2b$12$QLEoEtXKUTM1iNjvXhw9bOznukLeqFX9oLyKyseo0pb45.PIIj3k.',
+    '4425550101',
+    TRUE
+) ON CONFLICT (correo) DO UPDATE SET contrasena_hash = EXCLUDED.contrasena_hash, activo = TRUE;
+
+INSERT INTO productores (id_productor, id_usuario, nombre_negocio, descripcion, municipio, estado, estatus_validacion)
+VALUES (
+    1,
+    2,
+    'Huerto Orgánico El Sembrador',
+    'Cultivo sustentable de hortalizas y frutas libres de agroquímicos en El Marqués, Querétaro.',
+    'El Marqués',
+    'Querétaro',
+    'validado'
+) ON CONFLICT (id_usuario) DO NOTHING;
+
+-- 3. Usuario Consumidor (Password: Consumidor1234*)
+INSERT INTO usuarios (id_usuario, id_rol, nombre, apellidos, correo, contrasena_hash, telefono, activo)
+VALUES (
+    3,
+    3,
+    'María',
+    'Hernández López',
+    'consumidor@cosechajusta.upq.edu.mx',
+    '$2b$12$62vx2WeNBogiJrCRqMwHqO9n.yTLuxNUxN8WDgXvf.TVUkSWc9N76',
+    '4425550202',
+    TRUE
+) ON CONFLICT (correo) DO UPDATE SET contrasena_hash = EXCLUDED.contrasena_hash, activo = TRUE;
+
+INSERT INTO consumidores (id_consumidor, id_usuario, direccion, municipio)
+VALUES (
+    1,
+    3,
+    'Av. de la Luz 450, Col. Satélite',
+    'Querétaro'
+) ON CONFLICT (id_usuario) DO NOTHING;
+
+INSERT INTO carritos (id_carrito, id_consumidor)
+VALUES (1, 1) ON CONFLICT (id_consumidor) DO NOTHING;
+
+-- Opciones de entrega del productor
+INSERT INTO productor_opcion_entrega (id_productor, id_opcion, costo_envio)
+VALUES 
+    (1, 1, 35.00),
+    (1, 2, 0.00)
+ON CONFLICT (id_productor, id_opcion) DO NOTHING;
+
+-- Productos semilla para catálogo
+INSERT INTO productos (id_producto, id_productor, id_categoria, id_unidad, nombre, descripcion, precio, cantidad_disponible, foto_url, estado)
+VALUES
+    (1, 1, 2, 1, 'Jitomate Saladette Orgánico', 'Jitomate fresco de invernadero cultivado sin pesticidas sintéticos.', 28.50, 85.00, 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500', 'publicado'),
+    (2, 1, 1, 1, 'Manzana Criolla San Joaquín', 'Manzana dulce y crujiente cosechada en huerto familiar.', 42.00, 120.00, 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=500', 'publicado'),
+    (3, 1, 2, 6, 'Espinaca Baby Fresca', 'Manojo de espinaca recién cortada, desinfectada y lista para ensaladas.', 18.00, 40.00, 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=500', 'publicado'),
+    (4, 1, 5, 1, 'Queso Ranchero Artesanal', 'Elaborado con leche bronca 100% de vaca, sal de grano y cuajo natural.', 110.00, 25.00, 'https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=500', 'publicado'),
+    (5, 1, 7, 3, 'Miel Pura de Flor de Azahar', 'Miel pura de abeja cosechada artesanalmente sin calentar ni alterar.', 160.00, 30.00, 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=500', 'publicado')
+ON CONFLICT (id_producto) DO NOTHING;
 
 -- Ajustar secuencias de ID
 SELECT setval('roles_id_rol_seq', (SELECT MAX(id_rol) FROM roles));
@@ -251,4 +315,8 @@ SELECT setval('estados_pedido_id_estado_seq', (SELECT MAX(id_estado) FROM estado
 SELECT setval('unidades_medida_id_unidad_seq', (SELECT MAX(id_unidad) FROM unidades_medida));
 SELECT setval('categorias_id_categoria_seq', (SELECT MAX(id_categoria) FROM categorias));
 SELECT setval('opciones_entrega_id_opcion_seq', (SELECT MAX(id_opcion) FROM opciones_entrega));
-SELECT setval('usuarios_id_usuario_seq', (SELECT MAX(id_usuario) FROM usuarios));
+SELECT setval('usuarios_id_usuario_seq', (SELECT GREATEST(MAX(id_usuario), 3) FROM usuarios));
+SELECT setval('productores_id_productor_seq', (SELECT GREATEST(MAX(id_productor), 1) FROM productores));
+SELECT setval('consumidores_id_consumidor_seq', (SELECT GREATEST(MAX(id_consumidor), 1) FROM consumidores));
+SELECT setval('carritos_id_carrito_seq', (SELECT GREATEST(MAX(id_carrito), 1) FROM carritos));
+SELECT setval('productos_id_producto_seq', (SELECT GREATEST(MAX(id_producto), 5) FROM productos));

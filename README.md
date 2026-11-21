@@ -1,106 +1,189 @@
-# 🌾 Cosecha Justa - Plataforma Tecnológica
+# Cosecha Justa
 
-> **Proyecto de Estadía - Ingeniería en Sistemas Computacionales**  
-> **Universidad Politécnica de Querétaro (UPQ)**
-
----
-
-## 📌 1. Descripción del Proyecto
-
-**Cosecha Justa** es una plataforma digital orientada a vincular de manera directa a pequeños productores locales agrícolas y ganaderos con consumidores finales. Su objetivo es democratizar el acceso a mercados, transparentar los precios y fomentar el comercio justo sin depender forzosamente de intermediarios comerciales.
+Plataforma tecnológica orientada al comercio justo y venta directa entre pequeños productores agrícolas/ganaderos y consumidores finales. Diseñada bajo una **arquitectura desacoplada** de alta cohesión y bajo acoplamiento para la Universidad Politécnica de Querétaro (UPQ).
 
 ---
 
-## 🏛️ 2. Arquitectura Desacoplada del Sistema
-
-El proyecto cumple con la **arquitectura desacoplada obligatoria** especificada en la Ficha Técnica de la UPQ:
+## 🏛️ Topología de la Arquitectura
 
 ```
-[ App Móvil - React Native ]         [ Panel Web Admin - Laravel ]
-(Productores y Consumidores)             (Administradores)
-              │                                   │
-              │         (HTTPS / JSON + JWT)      │
-              └───────────────┬───────────────────┘
-                              ▼
-                     [ API REST - FastAPI ]
-                   (Validaciones, Roles, Lógica)
-                              │
-                              ▼ (Asyncpg / SQLAlchemy)
-                 [ PostgreSQL 16 Compartido ]
-                   (17 Tablas en 3FN + CHECKs)
+                        ┌────────────────────────────────────────┐
+                        │       FRONTEND MOBILE (React Native)   │
+                        │    • Perfil Productor (Gestión/Ventas) │
+                        │    • Perfil Consumidor (Catálogo/Order)│
+                        └───────────────────┬────────────────────┘
+                                            │
+                                            │ HTTPS / JSON (JWT)
+                                            ▼
+┌────────────────────────────────┐      ┌────────────────────────┐
+│   FRONTEND ADMIN (Laravel)     │      │   BACKEND RESTful API  │
+│ • Validación de productores    ├─────►│        (FastAPI)       │
+│ • Supervisión y reportes       │      │  • Reglas de negocio   │
+│ • Gestión de incidencias       │      │  • Autenticación JWT   │
+└────────────────────────────────┘      └───────────┬────────────┘
+                                                    │
+                                                    │ SQLAlchemy Async / asyncpg
+                                                    ▼
+                                        ┌────────────────────────┐
+                                        │  PostgreSQL 16 Engine  │
+                                        │  • 17 Tablas en 3FN    │
+                                        │  • Restricciones CHECK │
+                                        └────────────────────────┘
 ```
 
-1. **Frontend Móvil (`frontend-mobile/`)**: Aplicación móvil híbrida desarrollada en **React Native / Expo**, con interfaces optimizadas para Productores y Consumidores.
-2. **Frontend Web de Administración (`frontend-admin/`)**: Panel web desarrollado en **Laravel** para la supervisión global, aprobación de productores y resolución de incidencias.
-3. **Backend API (`backend-api/`)**: API REST desarrollada en **FastAPI (Python)** que centraliza la autenticación mediante tokens JWT, aplica las reglas de negocio e interactúa exclusivamente con la base de datos.
-4. **Base de Datos Compartida (`docker/postgres/`)**: **PostgreSQL 16** con 17 tablas normalizadas en 3FN, llaves foráneas con integridad referencial, restricciones CHECK e índices de consulta rápida.
+**Regla de Arquitectura**: Los frontends (móvil y web) nunca acceden directamente a la base de datos PostgreSQL. Toda transacción pasa forzosamente por la API centralizada en FastAPI.
 
 ---
 
-## 🐳 3. ¿Lleva Docker?
+## 🧰 Stack Tecnológico
 
-**Sí, Docker es fundamental en este proyecto.**  
-Permite levantar el entorno de desarrollo y pruebas de manera reproducible entre los miembros del equipo:
-- Levanta **PostgreSQL 16** con el script de esquema (`01_init_schema.sql`) y catálogos precargados automáticamente.
-- Levanta la **API de FastAPI** con hot-reload en `http://localhost:8000`.
-- Levanta **pgAdmin 4** en `http://localhost:5050` para inspeccionar la base de datos en entorno gráfico.
+| Capa | Tecnología | Versión / Detalle |
+| :--- | :--- | :--- |
+| **API Backend** | Python / FastAPI | FastAPI 0.111+, Pydantic v2, Uvicorn, Python-Jose (JWT), bcrypt nativo |
+| **Base de Datos** | PostgreSQL | 16-alpine con 17 tablas normalizadas e integridad referencial |
+| **Frontend Móvil** | React Native / Expo | Expo SDK 51, React Navigation (Stacks & Tabs), Axios, AsyncStorage |
+| **Frontend Web Admin** | PHP / Laravel | Laravel 11, GuzzleHttp / Client Service desacoplado, Bootstrap 5 |
+| **Contenerización** | Docker & Compose | Orquestación completa de BD, API y pgAdmin |
 
-### Ejecución con Docker:
+---
+
+## 🚀 Inicio Rápido con Docker
+
+La forma recomendada de ejecutar el entorno local completo es mediante Docker Compose:
+
+### 1. Clonar el repositorio y levantar los contenedores
 ```bash
-# Iniciar todos los servicios
+git clone https://github.com/TU_ORGANIZACION/cosecha-justa.git
+cd cosecha-justa
 docker compose up -d --build
+```
 
-# Ver logs de la API y base de datos
-docker compose logs -f backend_api
+### 2. Servicios disponibles
+| Servicio | URL Local | Descripción |
+| :--- | :--- | :--- |
+| **API RESTful (FastAPI)** | [http://localhost:8000](http://localhost:8000) | Endpoint base de la API |
+| **Documentación Swagger UI** | [http://localhost:8000/docs](http://localhost:8000/docs) | Explorador interactivo OpenAPI con soporte OAuth2 |
+| **Documentación ReDoc** | [http://localhost:8000/redoc](http://localhost:8000/redoc) | Especificación OpenAPI estructurada |
+| **pgAdmin 4** | [http://localhost:5050](http://localhost:5050) | Gestor web visual de PostgreSQL |
+| **PostgreSQL 16** | `localhost:5432` | Motor de base de datos relacional |
 
-# Detener los servicios
-docker compose down
+---
+
+## 🔐 Credenciales del Entorno de Desarrollo
+
+La base de datos se inicializa automáticamente con 3 usuarios predeterminados que cubren cada perfil del sistema:
+
+| Rol | Correo Electrónico | Contraseña | Rol ID | Alcance / Permisos |
+| :--- | :--- | :--- | :---: | :--- |
+| **Administrador** | `admin@cosechajusta.upq.edu.mx` | `Admin1234*` | `1` | Acceso total al panel Laravel y endpoints `/admin/*` |
+| **Productor** | `productor@cosechajusta.upq.edu.mx` | `Productor1234*` | `2` | Gestión de cosechas, precios, inventario y órdenes en la App |
+| **Consumidor** | `consumidor@cosechajusta.upq.edu.mx` | `Consumidor1234*` | `3` | Búsqueda, comparación de precios, pedidos y reseñas |
+
+### Credenciales para pgAdmin (`localhost:5050`)
+- **Email**: `admin@cosechajusta.upq.edu.mx`
+- **Password**: `admin_password_2026`
+- **Host de Conexión a BD**: `postgres_db` (o `localhost` si se conecta externamente)
+- **Database**: `cosecha_justa_db`
+- **User**: `cosecha_user`
+- **Password**: `cosecha_secure_password_2026`
+
+---
+
+## 💻 Ejecución de Frontends
+
+### 📱 Frontend Móvil (React Native / Expo)
+```bash
+cd frontend-mobile
+npm install
+npm start
+```
+- Presiona `a` para abrir en el emulador de Android.
+- Presiona `w` para abrir en el navegador web.
+- O escanea el código QR con la app **Expo Go** en tu smartphone (asegurando estar en la misma red Wi-Fi y configurando la IP LAN en `src/services/api.ts`).
+
+### 🌐 Frontend Web de Administración (Laravel)
+```bash
+cd frontend-admin
+cp .env.example .env
+composer install
+php artisan key:generate
+php artisan serve --port=8080
+```
+Acceder en [http://localhost:8080](http://localhost:8080).
+
+---
+
+## 🧪 Pruebas de la API (cURL / HTTP)
+
+### 1. Iniciar sesión y obtener JWT
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"correo": "admin@cosechajusta.upq.edu.mx", "contrasena": "Admin1234*"}'
+```
+
+### 2. Consultar catálogo de productos (Público)
+```bash
+curl -X GET "http://localhost:8000/api/v1/products?sector=agricola"
+```
+
+### 3. Endpoint protegido (requiere Bearer Token)
+```bash
+curl -X GET http://localhost:8000/api/v1/admin/dashboard \
+  -H "Authorization: Bearer <TU_TOKEN_JWT>"
 ```
 
 ---
 
-## 🚀 4. Documentación y Endpoints de la API
-
-Una vez iniciada la API en `http://localhost:8000`:
-- **Swagger UI interactivo**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **Redoc UI**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
-
----
-
-## 📁 5. Estructura del Repositorio
+## 📂 Estructura del Proyecto
 
 ```
 cosecha-justa/
-├── docker-compose.yml              # Orquestador Docker (Postgres + FastAPI + pgAdmin)
+├── docker-compose.yml              # Orquestación de contenedores (Postgres + FastAPI + pgAdmin)
 ├── .gitignore                      # Reglas de exclusión para Git
+├── README.md                       # Documentación técnica general
 ├── docker/
 │   └── postgres/init/
-│       └── 01_init_schema.sql      # Esquema de 17 tablas, checks, índices y semillas
-├── backend-api/                    # Núcleo API FastAPI
+│       ├── 01_init_schema.sql      # Esquema DDL de las 17 tablas + CHECKs + Índices
+│       └── 02_seed_data.sql        # Datos semilla para pruebas inmediatas
+├── backend-api/                    # Servicio REST FastAPI
 │   ├── Dockerfile
 │   ├── requirements.txt
 │   ├── .env.example
 │   └── app/
-│       ├── main.py                 # Punto de entrada FastAPI con CORS y rutas
-│       ├── core/                   # Configuración, DB async y JWT
-│       ├── models/                 # Modelos SQLAlchemy para las 17 tablas
-│       ├── schemas/                # Validaciones y esquemas Pydantic v2
-│       └── api/v1/endpoints/       # Controladores de Auth, Catálogos, Productos, Pedidos y Admin
+│       ├── main.py                 # Instancia de FastAPI con CORS y prefijos
+│       ├── core/                   # config.py, database.py (asyncpg) y security.py (JWT/bcrypt)
+│       ├── models/                 # Modelos SQLAlchemy 2.0 (17 entidades)
+│       ├── schemas/                # Validaciones Pydantic v2
+│       └── api/v1/endpoints/       # auth, products, producers, orders, admin, catalogs
+├── frontend-mobile/                # Aplicación React Native / Expo
+│   ├── package.json
+│   ├── app.json
+│   ├── App.tsx                     # Navegación y AuthProvider
+│   └── src/
+│       ├── services/api.ts         # Cliente Axios desacoplado
+│       ├── context/AuthContext.tsx # Contexto global de sesión
+│       └── screens/                # Pantallas Productor y Consumidor
 ├── frontend-admin/                 # Panel Web Laravel
-├── frontend-mobile/                # Aplicación Móvil React Native
-└── docs/                           # Documentación técnica, diagramas y especificaciones
-    └── diagramas/                  # 32 Diagramas de secuencia, casos de uso, componentes y ER
+│   ├── composer.json
+│   ├── routes/web.php
+│   ├── app/Services/FastApiClient.php # Cliente HTTP hacia FastAPI
+│   └── resources/views/            # Vistas Blade con Bootstrap 5
+└── docs/                           # Documentación de análisis y diseño
+    ├── ANALISIS_Y_COMPARATIVA_FICHA.md
+    ├── GUIA_VIDEO_PRESENTACION_FRONTEND.md
+    └── diagramas/                  # 32 Diagramas de secuencia, casos de uso y relacional
 ```
 
 ---
 
-## 🐙 6. Configuración del Repositorio en GitHub
+## 🌿 Flujo de Trabajo Git y Commits
 
-Para conectar este repositorio local con tu cuenta de GitHub:
-```bash
-# 1. Crear un repositorio vacío en github.com con el nombre 'cosecha-justa'
-# 2. En la terminal de este proyecto ejecutar:
-git remote add origin https://github.com/TU_USUARIO/cosecha-justa.git
-git branch -M main
-git push -u origin main
-```
+Para mantener trazabilidad limpia por avances:
+- Rama principal de producción: `main`
+- Ramas por características: `feature/nombre-de-la-funcion` (e.g. `feature/modulo-carrito`)
+- Estándar de commits semánticos:
+  - `feat:` Nuevas funcionalidades
+  - `fix:` Correcciones de errores
+  - `docs:` Modificaciones a documentación
+  - `refactor:` Mejoras en código sin alterar comportamiento
