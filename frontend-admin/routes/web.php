@@ -7,6 +7,9 @@ use App\Http\Controllers\ProducerController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\IncidentController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ReportController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -36,4 +39,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Atención de Incidencias (RF-ADM-08)
     Route::get('/incidencias', [IncidentController::class, 'index'])->name('incidents.index');
     Route::patch('/incidencias/{id}/resolve', [IncidentController::class, 'resolve'])->name('incidents.resolve');
+
+    // Gestión de Categorías y Catálogos (RF-ADM-04)
+    Route::get('/categorias', [CategoryController::class, 'index'])->name('categories.index');
+    Route::post('/categorias', [CategoryController::class, 'store'])->name('categories.store');
+    Route::patch('/categorias/{id}/toggle', [CategoryController::class, 'toggle'])->name('categories.toggle');
+
+    // Auditoría y Monitoreo de Pedidos Globales (RF-ADM-06)
+    Route::get('/pedidos', [OrderController::class, 'index'])->name('orders.index');
+
+    // Reportes Comerciales y Estadísticas (RF-ADM-07)
+    Route::get('/reportes', [ReportController::class, 'index'])->name('reports.index');
 });

@@ -92,4 +92,40 @@ class FastApiClient
             'resolucion' => $resolucion,
         ])->json() ?? [];
     }
+
+    // Categorías y Catálogos (RF-ADM-04)
+    public function getCategories(): array
+    {
+        return $this->request()->get("{$this->baseUrl}/admin/categories")->json() ?? [];
+    }
+
+    public function createCategory(string $nombre, string $tipoSector, bool $activa = true): array
+    {
+        return $this->request()->post("{$this->baseUrl}/admin/categories", [
+            'nombre' => $nombre,
+            'tipo_sector' => $tipoSector,
+            'activa' => $activa,
+        ])->json() ?? [];
+    }
+
+    public function updateCategory(int $id, array $data): array
+    {
+        return $this->request()->patch("{$this->baseUrl}/admin/categories/{$id}", $data)->json() ?? [];
+    }
+
+    // Pedidos Globales (RF-ADM-06)
+    public function getAdminOrders(?int $estadoId = null): array
+    {
+        $url = "{$this->baseUrl}/admin/orders";
+        if ($estadoId) {
+            $url .= "?estado_id={$estadoId}";
+        }
+        return $this->request()->get($url)->json() ?? [];
+    }
+
+    // Reportes Comerciales y Financieros (RF-ADM-07)
+    public function getSalesReport(): array
+    {
+        return $this->request()->get("{$this->baseUrl}/admin/reports/sales")->json() ?? [];
+    }
 }

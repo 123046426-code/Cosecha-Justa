@@ -88,6 +88,11 @@ class CategoriaCreate(BaseModel):
     tipo_sector: str = Field(..., pattern="^(agricola|ganadero)$")
     activa: bool = True
 
+class CategoriaUpdate(BaseModel):
+    nombre: Optional[str] = Field(None, max_length=60)
+    tipo_sector: Optional[str] = Field(None, pattern="^(agricola|ganadero)$")
+    activa: Optional[bool] = None
+
 # ----------------- UNIDADES DE MEDIDA -----------------
 class UnidadMedidaResponse(BaseModel):
     id_unidad: int
@@ -262,3 +267,29 @@ class EstadisticasAdminResponse(BaseModel):
     total_pedidos_global: int
     monto_total_transacciones: Decimal
     incidencias_abiertas: int
+
+# ----------------- ADMIN EXTENSION -----------------
+class AdminOrderResponse(BaseModel):
+    id_pedido: int
+    id_consumidor: int
+    nombre_consumidor: str
+    id_productor: int
+    nombre_negocio_productor: str
+    id_estado: int
+    nombre_estado: str
+    total: Decimal
+    direccion_entrega: Optional[str] = None
+    fecha_pedido: datetime
+    motivo_rechazo: Optional[str] = None
+    total_productos: int
+
+    class Config:
+        from_attributes = True
+
+class AdminReportSalesResponse(BaseModel):
+    monto_total_ventas: Decimal
+    total_pedidos_cerrados: int
+    ticket_promedio: Decimal
+    ventas_agricolas: Decimal
+    ventas_ganaderas: Decimal
+    top_productores: List[dict]

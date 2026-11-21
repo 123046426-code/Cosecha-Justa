@@ -1,20 +1,21 @@
 from decimal import Decimal
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func, and_, desc
 from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
 from app.core.security import check_role, get_current_user_payload
 from app.models.models import (
     Usuario, Productor, Consumidor, Producto, Pedido,
-    Incidencia, Categoria
+    Incidencia, Categoria, EstadoPedido, DetallePedido
 )
 from app.schemas.schemas import (
     EstadisticasAdminResponse, ProductorResponse,
-    UsuarioResponse, CategoriaCreate, CategoriaResponse,
-    IncidenciaResponse, IncidenciaUpdate
+    UsuarioResponse, CategoriaCreate, CategoriaUpdate, CategoriaResponse,
+    IncidenciaResponse, IncidenciaUpdate,
+    AdminOrderResponse, AdminReportSalesResponse
 )
 
 router = APIRouter()
@@ -170,3 +171,148 @@ async def update_incident(
     await db.commit()
     await db.refresh(inc)
     return inc
+
+@router.get("/categories", response_model=List[CategoriaResponse])
+async def list_admin_categories(
+    payload: dict = Depends(check_role(required_role_id=1)),
+    db: AsyncSession = Depends(get_db)
+):
+    """RF-ADM-04: Lista completa de categorías para administración"""
+    stmt = select(Categoria).order_by(Categoria.id_categoria.asc())
+    res = await db.execute(stmt)
+    return res.scalars().all()
+
+@router.patch("/categories/{id_categoria}", response_model=CategoriaResponse)
+async def update_category(
+    id_categoria: int,
+    cat_in: CategoriaUpdate,
+    payload: dict = Depends(check_role(required_role_id=1)),
+    db: AsyncSession = Depends(get_db)
+):
+    """RF-ADM-04: Actualizar nombre, sector o activar/desactivar categoría"""
+    stmt = select(Categoria).where(Categoria.id_categoria == id_categoria)
+    res = await db.execute(stmt)
+    cat = res.scalars().first()
+    if not cat:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Categoría no encontrada")
+
+    if cat_in.nombre is not None:
+        cat.nombre = cat_in.nombre
+    if cat_in.tipo_sector is not None:
+        cat.tipo_sector = cat_in.tipo_sector
+    if cat_in.activa is not None:
+        cat.activa = cat_in.activa
+
+    await db.commit()
+    await db.refresh(cat)
+    return cat
+
+@router.get("/orders", response_model=List[AdminOrderResponse])
+async def list_admin_orders(
+    estado_id: Optional[int] = Query(None, description="Filtrar por estado de pedido"),
+    payload: dict = Depends(check_role(required_role_id=1)),
+    db: AsyncSession = Depends(get_db)
+):
+    """RF-ADM-06: Monitoreo global de pedidos en curso y cerrados"""
+    query = select(Pedido).options(
+        selectinload(Pedido.consumidor).selectinload(Consumidor.usuario),
+        selectinload(Pedido.productor),
+        selectinload(Pedido.estado),
+        selectinload(Pedido.detalles)
+    ).order_by(desc(Pedido.fecha_pedido))
+
+    if estado_id:
+        query = query.where(Pedido.id_estado == estado_id)
+
+    res = await db.execute(query)
+    pedidos = res.scalars().all()
+
+    output = []
+    for p in pedidos:
+        nombre_cons = f"{p.consumidor.usuario.nombre} {p.consumidor.usuario.apellidos}" if (p.consumidor and p.consumidor.usuario) else "Consumidor"
+        nombre_prod = p.productor.nombre_negocio if p.productor else "Productor"
+        total_items = sum([d.cantidad for d in p.detalles]) if p.detalles else 0
+
+        output.append(AdminOrderResponse(
+            id_pedido=p.id_pedido,
+            id_consumidor=p.id_consumidor,
+            nombre_consumidor=nombre_cons,
+            id_productor=p.id_productor,
+            nombre_negocio_productor=nombre_prod,
+            id_estado=p.id_estado,
+            nombre_estado=p.estado.nombre if p.estado else "desconocido",
+            total=p.total,
+            direccion_entrega=p.direccion_entrega,
+            fecha_pedido=p.fecha_pedido,
+            motivo_rechazo=p.motivo_rechazo,
+            total_productos=int(total_items)
+        ))
+    return output
+
+@router.get("/reports/sales", response_model=AdminReportSalesResponse)
+async def get_sales_report(
+    payload: dict = Depends(check_role(required_role_id=1)),
+    db: AsyncSession = Depends(get_db)
+):
+    """RF-ADM-07: Reporte consolidado de volumen comercial, sector y top productores"""
+    # Total ventas y pedidos entregados (id_estado = 5)
+    entregados_stmt = select(
+        func.coalesce(func.sum(Pedido.total), Decimal("0.00")),
+        func.count(Pedido.id_pedido)
+    ).where(Pedido.id_estado == 5)
+    res_entregados = (await db.execute(entregados_stmt)).first()
+    monto_total = res_entregados[0] or Decimal("0.00")
+    total_pedidos = res_entregados[1] or 0
+
+    ticket_promedio = (monto_total / total_pedidos) if total_pedidos > 0 else Decimal("0.00")
+
+    # Ventas por sector (agrícola vs ganadero)
+    sector_stmt = select(
+        Categoria.tipo_sector,
+        func.coalesce(func.sum(DetallePedido.subtotal), Decimal("0.00"))
+    ).join(Producto, DetallePedido.id_producto == Producto.id_producto
+    ).join(Categoria, Producto.id_categoria == Categoria.id_categoria
+    ).join(Pedido, DetallePedido.id_pedido == Pedido.id_pedido
+    ).where(Pedido.id_estado == 5
+    ).group_by(Categoria.tipo_sector)
+
+    res_sectores = (await db.execute(sector_stmt)).all()
+    ventas_agricolas = Decimal("0.00")
+    ventas_ganaderas = Decimal("0.00")
+    for sec, sum_val in res_sectores:
+        if sec == "agricola":
+            ventas_agricolas = sum_val
+        elif sec == "ganadero":
+            ventas_ganaderas = sum_val
+
+    # Top productores por volumen facturado
+    top_stmt = select(
+        Productor.nombre_negocio,
+        Productor.municipio,
+        func.coalesce(func.sum(Pedido.total), Decimal("0.00")).label("ventas"),
+        func.count(Pedido.id_pedido).label("pedidos")
+    ).join(Pedido, Productor.id_productor == Pedido.id_productor
+    ).where(Pedido.id_estado == 5
+    ).group_by(Productor.id_productor, Productor.nombre_negocio, Productor.municipio
+    ).order_by(desc("ventas")
+    ).limit(5)
+
+    res_top = (await db.execute(top_stmt)).all()
+    top_productores = [
+        {
+            "nombre_negocio": row[0],
+            "municipio": row[1],
+            "ventas_totales": float(row[2]),
+            "pedidos_cerrados": row[3]
+        }
+        for row in res_top
+    ]
+
+    return AdminReportSalesResponse(
+        monto_total_ventas=monto_total,
+        total_pedidos_cerrados=total_pedidos,
+        ticket_promedio=ticket_promedio,
+        ventas_agricolas=ventas_agricolas,
+        ventas_ganaderas=ventas_ganaderas,
+        top_productores=top_productores
+    )

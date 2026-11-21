@@ -19,6 +19,7 @@ async def get_categories(db: AsyncSession = Depends(get_db)):
     return result.scalars().all()
 
 @router.get("/units", response_model=List[UnidadMedidaResponse])
+@router.get("/measurement-units", response_model=List[UnidadMedidaResponse])
 async def get_units(db: AsyncSession = Depends(get_db)):
     """Obtiene el catálogo de unidades de medida"""
     stmt = select(UnidadMedida).order_by(UnidadMedida.nombre)
