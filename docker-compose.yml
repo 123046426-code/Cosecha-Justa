@@ -53,6 +53,26 @@ services:
     depends_on:
       - postgres_db
 
+  # Frontend Web de Administración (Laravel / PHP)
+  frontend_admin:
+    build:
+      context: ./frontend-admin
+      dockerfile: Dockerfile
+    container_name: cosecha_justa_admin
+    restart: always
+    environment:
+      APP_NAME: "Cosecha Justa - Admin"
+      APP_ENV: local
+      APP_KEY: base64:COSECHAJUSTAADMINKEY2026UPQESTADIA123=
+      APP_DEBUG: "true"
+      FASTAPI_BASE_URL: http://backend_api:8000/api/v1
+    ports:
+      - "8080:8000"
+    volumes:
+      - ./frontend-admin:/var/www/html
+    depends_on:
+      - backend_api
+
 volumes:
   pgdata:
     driver: local

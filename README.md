@@ -169,10 +169,6 @@ cosecha-justa/
 │   ├── routes/web.php
 │   ├── app/Services/FastApiClient.php # Cliente HTTP hacia FastAPI
 │   └── resources/views/            # Vistas Blade con Bootstrap 5
-└── docs/                           # Documentación de análisis y diseño
-    ├── ANALISIS_Y_COMPARATIVA_FICHA.md
-    ├── GUIA_VIDEO_PRESENTACION_FRONTEND.md
-    └── diagramas/                  # 32 Diagramas de secuencia, casos de uso y relacional
 ```
 
 ---

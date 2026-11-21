@@ -34,6 +34,9 @@ pgdata/
 *.sqlite3
 *.log
 
+# Documentación interna / local
+docs/
+
 # IDE & OS
 .DS_Store
 Thumbs.db

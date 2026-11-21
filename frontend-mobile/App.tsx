@@ -13,6 +13,7 @@ import { ProducerDashboardScreen } from './src/screens/producer/ProducerDashboar
 import { MyProductsScreen } from './src/screens/producer/MyProductsScreen';
 import { ProductFormScreen } from './src/screens/producer/ProductFormScreen';
 import { ProducerOrdersScreen } from './src/screens/producer/ProducerOrdersScreen';
+import { DeliveryOptionsScreen } from './src/screens/producer/DeliveryOptionsScreen';
 
 // Pantallas Consumidor
 import { ConsumerCatalogScreen } from './src/screens/consumer/ConsumerCatalogScreen';
@@ -79,6 +80,11 @@ const NavigationContent = () => {
               name="ProducerOrders"
               component={ProducerOrdersScreen}
               options={{ title: 'Atención de Pedidos' }}
+            />
+            <Stack.Screen
+              name="DeliveryOptions"
+              component={DeliveryOptionsScreen}
+              options={{ title: 'Opciones de Entrega' }}
             />
           </>
         ) : (
