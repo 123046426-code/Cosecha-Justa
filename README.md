@@ -53,8 +53,8 @@ La forma recomendada de ejecutar el entorno local completo es mediante Docker Co
 
 ### 1. Clonar el repositorio y levantar los contenedores
 ```bash
-git clone https://github.com/TU_ORGANIZACION/cosecha-justa.git
-cd cosecha-justa
+git clone https://github.com/123046426-code/Cosecha-Justa.git
+cd Cosecha-Justa
 docker compose up -d --build
 ```
 
@@ -64,6 +64,7 @@ docker compose up -d --build
 | **API RESTful (FastAPI)** | [http://localhost:8000](http://localhost:8000) | Endpoint base de la API |
 | **Documentación Swagger UI** | [http://localhost:8000/docs](http://localhost:8000/docs) | Explorador interactivo OpenAPI con soporte OAuth2 |
 | **Documentación ReDoc** | [http://localhost:8000/redoc](http://localhost:8000/redoc) | Especificación OpenAPI estructurada |
+| **Panel Web Admin (Laravel)** | [http://localhost:8080](http://localhost:8080) | Panel de administración y supervisión institucional |
 | **pgAdmin 4** | [http://localhost:5050](http://localhost:5050) | Gestor web visual de PostgreSQL |
 | **PostgreSQL 16** | `localhost:5432` | Motor de base de datos relacional |
 
@@ -81,11 +82,20 @@ La base de datos se inicializa automáticamente con 3 usuarios predeterminados q
 
 ### Credenciales para pgAdmin (`localhost:5050`)
 - **Email**: `admin@cosechajusta.upq.edu.mx`
-- **Password**: `admin_password_2026`
+- **Password**: `Admin1234*`
 - **Host de Conexión a BD**: `postgres_db` (o `localhost` si se conecta externamente)
 - **Database**: `cosecha_justa_db`
 - **User**: `cosecha_user`
 - **Password**: `cosecha_secure_password_2026`
+
+---
+
+## 🧪 Pruebas Automatizadas del Backend
+El backend incluye una suite de pruebas de integración para validar la autenticación, control de accesos RBAC, catálogos, pedidos y reportería:
+
+```bash
+docker exec cosecha_justa_api python -m unittest discover -s tests -p "test_*.py"
+```
 
 ---
 
