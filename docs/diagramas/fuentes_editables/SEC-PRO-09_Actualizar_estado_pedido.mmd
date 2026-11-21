@@ -1,0 +1,24 @@
+sequenceDiagram
+  autonumber
+  actor A as Productor
+  participant C as App móvil
+  participant API as API FastAPI
+  participant DB as PostgreSQL
+  A->>C: Selecciona el siguiente estado del pedido
+  C->>API: PATCH /pedidos/{id}/estado (token JWT en el encabezado)
+  API->>API: Verifica token, rol y propiedad del recurso
+  alt Token inválido o sin permiso
+    API-->>C: 401 o 403
+    C-->>A: Muestra mensaje de acceso denegado
+  else Acceso permitido
+    API->>API: Valida que la transición de estado sea permitida (aceptado, en preparación, listo, entregado)
+    alt Datos inválidos
+      API-->>C: 422 con detalle del error
+      C-->>A: Muestra los errores junto a los campos
+    else Datos válidos
+      API->>DB: UPDATE estado del pedido y registra el cambio
+      DB-->>API: Resultado de la operación
+      API-->>C: 200 estado actualizado
+      C-->>A: Muestra el nuevo estado
+    end
+  end

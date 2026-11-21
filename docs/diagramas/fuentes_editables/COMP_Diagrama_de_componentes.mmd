@@ -1,0 +1,48 @@
+flowchart TB
+  classDef mod fill:#E6F2EA,stroke:#2F6B3A,color:#111;
+  classDef core fill:#E3ECF7,stroke:#2B5A9B,color:#111;
+  classDef db fill:#FFF3D6,stroke:#B7791F,color:#111;
+  classDef box fill:#F7F9FB,stroke:#8A97A6,color:#111;
+  subgraph MOV["Aplicación móvil – React Native (Android e iOS)"]
+    direction TB
+    M1["Módulo de autenticación"]:::mod
+    M2["Módulo Productor<br/>perfil, productos, pedidos, estadísticas, entrega"]:::mod
+    M3["Módulo Consumidor<br/>catálogo, comparador, carrito, pedidos, calificaciones"]:::mod
+    M4["Navegación y estado de sesión"]:::core
+    M5["Cliente HTTP de la API<br/>y almacenamiento seguro del token"]:::core
+    M1 --> M4
+    M2 --> M4
+    M3 --> M4
+    M4 --> M5
+  end
+  subgraph WEB["Sistema web de administración – Laravel"]
+    direction TB
+    W1["Vistas Blade<br/>usuarios, productores, categorías, productos,<br/>pedidos, reportes, incidencias, catálogos"]:::mod
+    W2["Controladores y control de sesión"]:::core
+    W3["Servicio cliente de la API"]:::core
+    W1 --> W2
+    W2 --> W3
+  end
+  subgraph API["API – FastAPI"]
+    direction TB
+    A0["Middleware: autenticación JWT, roles y CORS"]:::core
+    ROUT["Routers REST<br/>/auth · /usuarios · /productores · /productos · /categorias<br/>/carrito · /pedidos · /calificaciones · /estadisticas · /reportes<br/>/incidencias · /catalogos"]:::mod
+    A1["Validación de datos (esquemas Pydantic)"]:::core
+    A2["Servicios de negocio<br/>reglas de pedidos, existencias y estados"]:::core
+    A3["Acceso a datos (ORM / repositorios)"]:::core
+    A4["Manejador de errores y respuestas estándar"]:::core
+    A0 --> ROUT
+    ROUT --> A1
+    A1 --> A2
+    A2 --> A3
+    A2 -.-> A4
+  end
+  subgraph DBS["Base de datos compartida"]
+    PG[("PostgreSQL<br/>usuarios, productores, productos, categorías,<br/>carritos, pedidos, calificaciones, incidencias, catálogos")]:::db
+  end
+  FS[("Almacenamiento de imágenes<br/>fotografías de productos")]:::db
+  M5 -->|"HTTPS · JSON · JWT"| A0
+  W3 -->|"HTTPS · JSON · JWT"| A0
+  A3 -->|"SQL"| PG
+  ROUT -.->|"guarda y sirve fotos"| FS
+  class MOV,WEB,API,DBS box;

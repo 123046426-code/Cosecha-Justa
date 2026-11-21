@@ -1,0 +1,24 @@
+sequenceDiagram
+  autonumber
+  actor A as Administrador
+  participant C as Sistema web Laravel
+  participant API as API FastAPI
+  participant DB as PostgreSQL
+  A->>C: Revisa productos y retira uno que incumple las reglas
+  C->>API: PATCH /productos/{id}/retirar (token JWT en el encabezado)
+  API->>API: Verifica token, rol y propiedad del recurso
+  alt Token inválido o sin permiso
+    API-->>C: 401 o 403
+    C-->>A: Muestra mensaje de acceso denegado
+  else Acceso permitido
+    API->>API: Valida que el motivo sea capturado
+    alt Datos inválidos
+      API-->>C: 422 con detalle del error
+      C-->>A: Muestra los errores junto a los campos
+    else Datos válidos
+      API->>DB: UPDATE estado del producto a retirado con motivo
+      DB-->>API: Resultado de la operación
+      API-->>C: 200 producto retirado
+      C-->>A: Muestra el producto como retirado
+    end
+  end

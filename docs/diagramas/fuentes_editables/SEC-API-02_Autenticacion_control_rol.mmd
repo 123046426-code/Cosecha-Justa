@@ -1,0 +1,18 @@
+sequenceDiagram
+  autonumber
+  participant C as Cliente (app móvil o web)
+  participant MW as Middleware JWT y roles
+  participant R as Router del recurso
+  C->>MW: Solicitud con token Bearer
+  MW->>MW: Verifica firma y vigencia del token
+  alt Token inválido o vencido
+    MW-->>C: 401 No autenticado
+  else Token válido
+    MW->>MW: Compara el rol con los permisos del endpoint
+    alt Rol sin permiso
+      MW-->>C: 403 Acceso denegado
+    else Rol permitido
+      MW->>R: Reenvía la solicitud con el usuario autenticado
+      R-->>C: Respuesta del recurso
+    end
+  end

@@ -1,0 +1,24 @@
+sequenceDiagram
+  autonumber
+  actor A as Productor
+  participant C as App móvil
+  participant API as API FastAPI
+  participant DB as PostgreSQL
+  A->>C: Captura categoría, descripción, precio, cantidad y fotografía
+  C->>API: POST /productos (token JWT en el encabezado)
+  API->>API: Verifica token, rol y propiedad del recurso
+  alt Token inválido o sin permiso
+    API-->>C: 401 o 403
+    C-->>A: Muestra mensaje de acceso denegado
+  else Acceso permitido
+    API->>API: Valida precio mayor a 0, cantidad mayor o igual a 0, categoría existente y formato de imagen
+    alt Datos inválidos
+      API-->>C: 422 con detalle del error
+      C-->>A: Muestra los errores junto a los campos
+    else Datos válidos
+      API->>DB: INSERT producto asociado al productor y guarda la ruta de la foto
+      DB-->>API: Resultado de la operación
+      API-->>C: 201 producto creado
+      C-->>A: Muestra el producto en su lista
+    end
+  end

@@ -1,0 +1,58 @@
+services:
+  # Base de Datos Relacional Compartida (PostgreSQL)
+  postgres_db:
+    image: postgres:16-alpine
+    container_name: cosecha_justa_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: cosecha_justa_db
+      POSTGRES_USER: cosecha_user
+      POSTGRES_PASSWORD: cosecha_secure_password_2026
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cosecha_user -d cosecha_justa_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Backend (FastAPI) - Núcleo de la Arquitectura Desacoplada
+  backend_api:
+    build:
+      context: ./backend-api
+      dockerfile: Dockerfile
+    container_name: cosecha_justa_api
+    restart: always
+    environment:
+      PROJECT_NAME: "Cosecha Justa API"
+      ENVIRONMENT: development
+      DATABASE_URL: postgresql+asyncpg://cosecha_user:cosecha_secure_password_2026@postgres_db:5432/cosecha_justa_db
+      SECRET_KEY: cosecha_justa_super_secret_jwt_key_estadisticas_upq_2026
+      ACCESS_TOKEN_EXPIRE_MINUTES: 1440
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend-api/app:/app/app
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+
+  # Gestor gráfico de base de datos (Opcional - pgAdmin)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: cosecha_justa_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@cosechajusta.upq.edu.mx
+      PGADMIN_DEFAULT_PASSWORD: admin_password_2026
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres_db
+
+volumes:
+  pgdata:
+    driver: local

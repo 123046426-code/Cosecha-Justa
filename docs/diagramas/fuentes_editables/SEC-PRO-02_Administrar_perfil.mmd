@@ -1,0 +1,24 @@
+sequenceDiagram
+  autonumber
+  actor A as Productor
+  participant C as App móvil
+  participant API as API FastAPI
+  participant DB as PostgreSQL
+  A->>C: Edita nombre, ubicación y descripción de su producción
+  C->>API: PUT /productores/me (token JWT en el encabezado)
+  API->>API: Verifica token, rol y propiedad del recurso
+  alt Token inválido o sin permiso
+    API-->>C: 401 o 403
+    C-->>A: Muestra mensaje de acceso denegado
+  else Acceso permitido
+    API->>API: Valida los datos recibidos y las reglas del negocio
+    alt Datos inválidos
+      API-->>C: 422 con detalle del error
+      C-->>A: Muestra los errores junto a los campos
+    else Datos válidos
+      API->>DB: UPDATE perfil del productor
+      DB-->>API: Resultado de la operación
+      API-->>C: 200 perfil actualizado
+      C-->>A: Muestra el perfil actualizado
+    end
+  end

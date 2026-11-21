@@ -1,0 +1,24 @@
+sequenceDiagram
+  autonumber
+  actor A as Productor
+  participant C as App móvil
+  participant API as API FastAPI
+  participant DB as PostgreSQL
+  A->>C: Selecciona las opciones de entrega que ofrece
+  C->>API: PUT /productores/me/opciones-entrega (token JWT en el encabezado)
+  API->>API: Verifica token, rol y propiedad del recurso
+  alt Token inválido o sin permiso
+    API-->>C: 401 o 403
+    C-->>A: Muestra mensaje de acceso denegado
+  else Acceso permitido
+    API->>API: Valida que las opciones existan en el catálogo
+    alt Datos inválidos
+      API-->>C: 422 con detalle del error
+      C-->>A: Muestra los errores junto a los campos
+    else Datos válidos
+      API->>DB: UPDATE opciones de entrega del productor
+      DB-->>API: Resultado de la operación
+      API-->>C: 200 opciones guardadas
+      C-->>A: Muestra las opciones guardadas
+    end
+  end

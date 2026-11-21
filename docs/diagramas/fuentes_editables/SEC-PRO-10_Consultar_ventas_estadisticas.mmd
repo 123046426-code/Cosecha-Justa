@@ -1,0 +1,18 @@
+sequenceDiagram
+  autonumber
+  actor A as Productor
+  participant C as App móvil
+  participant API as API FastAPI
+  participant DB as PostgreSQL
+  A->>C: Abre la sección de ventas y estadísticas
+  C->>API: GET /productores/me/estadisticas (token JWT en el encabezado)
+  API->>API: Verifica token, rol y propiedad del recurso
+  alt Token inválido o sin permiso
+    API-->>C: 401 o 403
+    C-->>A: Muestra mensaje de acceso denegado
+  else Acceso permitido
+    API->>DB: SELECT ventas totales y productos más solicitados
+    DB-->>API: Resultado de la consulta
+    API-->>C: 200 resumen de ventas
+    C-->>A: Muestra totales y productos más solicitados
+  end

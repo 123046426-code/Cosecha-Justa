@@ -1,0 +1,24 @@
+sequenceDiagram
+  autonumber
+  actor A as Administrador
+  participant C as Sistema web Laravel
+  participant API as API FastAPI
+  participant DB as PostgreSQL
+  A->>C: Consulta, activa, desactiva o edita una cuenta
+  C->>API: PATCH /usuarios/{id} (token JWT en el encabezado)
+  API->>API: Verifica token, rol y propiedad del recurso
+  alt Token inválido o sin permiso
+    API-->>C: 401 o 403
+    C-->>A: Muestra mensaje de acceso denegado
+  else Acceso permitido
+    API->>API: Valida datos y que no se desactive al último administrador
+    alt Datos inválidos
+      API-->>C: 422 con detalle del error
+      C-->>A: Muestra los errores junto a los campos
+    else Datos válidos
+      API->>DB: UPDATE datos o estado del usuario
+      DB-->>API: Resultado de la operación
+      API-->>C: 200 usuario actualizado
+      C-->>A: Muestra la lista de usuarios actualizada
+    end
+  end

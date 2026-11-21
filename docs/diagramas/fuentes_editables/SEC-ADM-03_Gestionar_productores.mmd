@@ -1,0 +1,24 @@
+sequenceDiagram
+  autonumber
+  actor A as Administrador
+  participant C as Sistema web Laravel
+  participant API as API FastAPI
+  participant DB as PostgreSQL
+  A->>C: Revisa un productor y lo valida o rechaza
+  C->>API: PATCH /productores/{id}/validacion (token JWT en el encabezado)
+  API->>API: Verifica token, rol y propiedad del recurso
+  alt Token inválido o sin permiso
+    API-->>C: 401 o 403
+    C-->>A: Muestra mensaje de acceso denegado
+  else Acceso permitido
+    API->>API: Valida que el productor exista y tenga datos completos
+    alt Datos inválidos
+      API-->>C: 422 con detalle del error
+      C-->>A: Muestra los errores junto a los campos
+    else Datos válidos
+      API->>DB: UPDATE estado de validación del productor
+      DB-->>API: Resultado de la operación
+      API-->>C: 200 productor validado
+      C-->>A: Muestra el estado de validación
+    end
+  end

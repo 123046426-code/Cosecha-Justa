@@ -1,0 +1,32 @@
+digraph G {
+  rankdir=LR; splines=true; nodesep=0.35; ranksep=2.2; fontname="DejaVu Sans";
+  node [fontname="DejaVu Sans", fontsize=13]; edge [fontname="DejaVu Sans", fontsize=11, arrowsize=0.8];
+  PRO [shape=box, style="filled,rounded", fillcolor="#FFF3D6", color="#B7791F", penwidth=2, label="«actor»\nProductor", margin="0.25,0.15"];
+  subgraph cluster_sys { label="Aplicación móvil – Perfil Productor"; labeljust=c; fontsize=15; style="rounded"; color="#2B5A9B"; penwidth=2; margin=24;
+    P01 [shape=ellipse, style=filled, fillcolor="#E6F2EA", color="#2F6B3A", label="RF-PRO-01\nRegistrar cuenta e iniciar\nsesión", margin="0.18,0.08"];
+    P02 [shape=ellipse, style=filled, fillcolor="#E6F2EA", color="#2F6B3A", label="RF-PRO-02\nAdministrar perfil", margin="0.18,0.08"];
+    P03 [shape=ellipse, style=filled, fillcolor="#E6F2EA", color="#2F6B3A", label="RF-PRO-03\nRegistrar productos", margin="0.18,0.08"];
+    P04 [shape=ellipse, style=filled, fillcolor="#E6F2EA", color="#2F6B3A", label="RF-PRO-04\nModificar precios", margin="0.18,0.08"];
+    P05 [shape=ellipse, style=filled, fillcolor="#E6F2EA", color="#2F6B3A", label="RF-PRO-05\nActualizar cantidades", margin="0.18,0.08"];
+    P06 [shape=ellipse, style=filled, fillcolor="#E6F2EA", color="#2F6B3A", label="RF-PRO-06\nPublicar o pausar\nproductos", margin="0.18,0.08"];
+    P07 [shape=ellipse, style=filled, fillcolor="#E6F2EA", color="#2F6B3A", label="RF-PRO-07\nConsultar pedidos", margin="0.18,0.08"];
+    P08 [shape=ellipse, style=filled, fillcolor="#E6F2EA", color="#2F6B3A", label="RF-PRO-08\nAceptar o rechazar pedidos", margin="0.18,0.08"];
+    P09 [shape=ellipse, style=filled, fillcolor="#E6F2EA", color="#2F6B3A", label="RF-PRO-09\nActualizar estado del\npedido", margin="0.18,0.08"];
+    P10 [shape=ellipse, style=filled, fillcolor="#E6F2EA", color="#2F6B3A", label="RF-PRO-10\nConsultar ventas y\nestadísticas", margin="0.18,0.08"];
+    P11 [shape=ellipse, style=filled, fillcolor="#E6F2EA", color="#2F6B3A", label="RF-PRO-11\nAdministrar opciones de\nentrega", margin="0.18,0.08"];
+    { rank=same; P01; P02; P03; P04; P05; P06; P07; P08; P09; P10; P11; }
+  }
+  PRO -> P01 [dir=none];
+  PRO -> P02 [dir=none];
+  PRO -> P03 [dir=none];
+  PRO -> P04 [dir=none];
+  PRO -> P05 [dir=none];
+  PRO -> P06 [dir=none];
+  PRO -> P07 [dir=none];
+  PRO -> P08 [dir=none];
+  PRO -> P09 [dir=none];
+  PRO -> P10 [dir=none];
+  PRO -> P11 [dir=none];
+  P08 -> P07 [style=dashed, label="«include»", constraint=false];
+  P09 -> P07 [style=dashed, label="«include»", constraint=false];
+}

@@ -1,0 +1,21 @@
+sequenceDiagram
+  autonumber
+  actor A as Consumidor
+  participant C as App móvil
+  participant API as API FastAPI
+  participant DB as PostgreSQL
+  A->>C: Confirma el carrito y elige la opción de entrega
+  C->>API: POST /pedidos (token JWT)
+  API->>API: Verifica token y rol consumidor
+  API->>DB: Consulta carrito, precios vigentes y existencias
+  DB-->>API: Elementos del carrito
+  alt Producto pausado o sin existencias suficientes
+    API-->>C: 409 con productos no disponibles
+    C-->>A: Avisa y permite ajustar el carrito
+  else Todo disponible
+    API->>API: Valida que la opción de entrega la ofrezca el productor
+    API->>DB: Crea un pedido por productor con su detalle (estado pendiente) y vacía el carrito
+    DB-->>API: Transacción confirmada
+    API-->>C: 201 con folio(s) del pedido
+    C-->>A: Muestra confirmación del pedido
+  end

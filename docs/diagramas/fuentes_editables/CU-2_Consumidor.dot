@@ -1,0 +1,31 @@
+digraph G {
+  rankdir=LR; splines=true; nodesep=0.35; ranksep=2.2; fontname="DejaVu Sans";
+  node [fontname="DejaVu Sans", fontsize=13]; edge [fontname="DejaVu Sans", fontsize=11, arrowsize=0.8];
+  CON [shape=box, style="filled,rounded", fillcolor="#FFF3D6", color="#B7791F", penwidth=2, label="«actor»\nConsumidor", margin="0.25,0.15"];
+  subgraph cluster_sys { label="Aplicación móvil – Perfil Consumidor"; labeljust=c; fontsize=15; style="rounded"; color="#2B5A9B"; penwidth=2; margin=24;
+    C01 [shape=ellipse, style=filled, fillcolor="#E6F2EA", color="#2F6B3A", label="RF-CON-01\nCrear y administrar cuenta", margin="0.18,0.08"];
+    C02 [shape=ellipse, style=filled, fillcolor="#E6F2EA", color="#2F6B3A", label="RF-CON-02\nBuscar y filtrar productos", margin="0.18,0.08"];
+    C03 [shape=ellipse, style=filled, fillcolor="#E6F2EA", color="#2F6B3A", label="RF-CON-03\nConsultar información del\nproductor", margin="0.18,0.08"];
+    C04 [shape=ellipse, style=filled, fillcolor="#E6F2EA", color="#2F6B3A", label="RF-CON-04\nComparar precios", margin="0.18,0.08"];
+    C05 [shape=ellipse, style=filled, fillcolor="#E6F2EA", color="#2F6B3A", label="RF-CON-05\nGestionar carrito", margin="0.18,0.08"];
+    C06 [shape=ellipse, style=filled, fillcolor="#E6F2EA", color="#2F6B3A", label="RF-CON-06\nGenerar pedidos", margin="0.18,0.08"];
+    C07 [shape=ellipse, style=filled, fillcolor="#E6F2EA", color="#2F6B3A", label="RF-CON-07\nConsultar historial de\npedidos", margin="0.18,0.08"];
+    C08 [shape=ellipse, style=filled, fillcolor="#E6F2EA", color="#2F6B3A", label="RF-CON-08\nDar seguimiento a compras", margin="0.18,0.08"];
+    C09 [shape=ellipse, style=filled, fillcolor="#E6F2EA", color="#2F6B3A", label="RF-CON-09\nCalificar productos o\ntransacciones", margin="0.18,0.08"];
+    { rank=same; C01; C02; C03; C04; C05; C06; C07; C08; C09; }
+  }
+  CON -> C01 [dir=none];
+  CON -> C02 [dir=none];
+  CON -> C03 [dir=none];
+  CON -> C04 [dir=none];
+  CON -> C05 [dir=none];
+  CON -> C06 [dir=none];
+  CON -> C07 [dir=none];
+  CON -> C08 [dir=none];
+  CON -> C09 [dir=none];
+  C06 -> C05 [style=dashed, label="«include»", constraint=false];
+  C03 -> C02 [style=dashed, label="«extend»", constraint=false];
+  C04 -> C02 [style=dashed, label="«extend»", constraint=false];
+  C08 -> C07 [style=dashed, label="«extend»", constraint=false];
+  C09 -> C08 [style=dashed, label="«extend»", constraint=false];
+}
