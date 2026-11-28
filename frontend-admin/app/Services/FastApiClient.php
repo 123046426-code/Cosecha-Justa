@@ -43,74 +43,86 @@ class FastApiClient
     // Dashboard
     public function getDashboardMetrics(): array
     {
-        return $this->request()->get("{$this->baseUrl}/admin/dashboard")->json() ?? [];
+        $res = $this->request()->get("{$this->baseUrl}/admin/dashboard");
+        return $res->successful() ? ($res->json() ?? []) : [];
     }
 
     // Productores
     public function getProducers(): array
     {
-        return $this->request()->get("{$this->baseUrl}/admin/producers")->json() ?? [];
+        $res = $this->request()->get("{$this->baseUrl}/admin/producers");
+        return $res->successful() ? ($res->json() ?? []) : [];
     }
 
     public function validateProducer(int $id, string $estatus): array
     {
-        return $this->request()->patch("{$this->baseUrl}/admin/producers/{$id}/validate?estatus={$estatus}")->json() ?? [];
+        $res = $this->request()->patch("{$this->baseUrl}/admin/producers/{$id}/validate?estatus={$estatus}");
+        return $res->successful() ? ($res->json() ?? []) : [];
     }
 
     // Usuarios
     public function getUsers(): array
     {
-        return $this->request()->get("{$this->baseUrl}/admin/users")->json() ?? [];
+        $res = $this->request()->get("{$this->baseUrl}/admin/users");
+        return $res->successful() ? ($res->json() ?? []) : [];
     }
 
     public function toggleUserStatus(int $id, bool $activo): array
     {
-        return $this->request()->patch("{$this->baseUrl}/admin/users/{$id}/status?activo=" . ($activo ? 'true' : 'false'))->json() ?? [];
+        $res = $this->request()->patch("{$this->baseUrl}/admin/users/{$id}/status?activo=" . ($activo ? 'true' : 'false'));
+        return $res->successful() ? ($res->json() ?? []) : [];
     }
 
     // Productos
     public function getProducts(): array
     {
-        return $this->request()->get("{$this->baseUrl}/products")->json() ?? [];
+        $res = $this->request()->get("{$this->baseUrl}/products");
+        return $res->successful() ? ($res->json() ?? []) : [];
     }
 
     public function retireProduct(int $id, string $motivo): array
     {
-        return $this->request()->patch("{$this->baseUrl}/admin/products/{$id}/retire?motivo=" . urlencode($motivo))->json() ?? [];
+        $res = $this->request()->patch("{$this->baseUrl}/admin/products/{$id}/retire?motivo=" . urlencode($motivo));
+        return $res->successful() ? ($res->json() ?? []) : [];
     }
 
     // Incidencias
     public function getIncidents(): array
     {
-        return $this->request()->get("{$this->baseUrl}/admin/incidents")->json() ?? [];
+        $res = $this->request()->get("{$this->baseUrl}/admin/incidents");
+        return $res->successful() ? ($res->json() ?? []) : [];
     }
 
     public function resolveIncident(int $id, string $resolucion): array
     {
-        return $this->request()->patch("{$this->baseUrl}/admin/incidents/{$id}", [
+        $res = $this->request()->patch("{$this->baseUrl}/admin/incidents/{$id}", [
             'estado' => 'resuelta',
             'resolucion' => $resolucion,
-        ])->json() ?? [];
+        ]);
+        return $res->successful() ? ($res->json() ?? []) : [];
     }
 
     // Categorías y Catálogos (RF-ADM-04)
     public function getCategories(): array
     {
-        return $this->request()->get("{$this->baseUrl}/admin/categories")->json() ?? [];
+        $res = $this->request()->get("{$this->baseUrl}/admin/categories");
+        return $res->successful() ? ($res->json() ?? []) : [];
     }
 
     public function createCategory(string $nombre, string $tipoSector, bool $activa = true): array
     {
-        return $this->request()->post("{$this->baseUrl}/admin/categories", [
+        $res = $this->request()->post("{$this->baseUrl}/admin/categories", [
             'nombre' => $nombre,
             'tipo_sector' => $tipoSector,
             'activa' => $activa,
-        ])->json() ?? [];
+        ]);
+        return $res->successful() ? ($res->json() ?? []) : [];
     }
 
     public function updateCategory(int $id, array $data): array
     {
-        return $this->request()->patch("{$this->baseUrl}/admin/categories/{$id}", $data)->json() ?? [];
+        $res = $this->request()->patch("{$this->baseUrl}/admin/categories/{$id}", $data);
+        return $res->successful() ? ($res->json() ?? []) : [];
     }
 
     // Pedidos Globales (RF-ADM-06)
@@ -120,12 +132,14 @@ class FastApiClient
         if ($estadoId) {
             $url .= "?estado_id={$estadoId}";
         }
-        return $this->request()->get($url)->json() ?? [];
+        $res = $this->request()->get($url);
+        return $res->successful() ? ($res->json() ?? []) : [];
     }
 
     // Reportes Comerciales y Financieros (RF-ADM-07)
     public function getSalesReport(): array
     {
-        return $this->request()->get("{$this->baseUrl}/admin/reports/sales")->json() ?? [];
+        $res = $this->request()->get("{$this->baseUrl}/admin/reports/sales");
+        return $res->successful() ? ($res->json() ?? []) : [];
     }
 }
